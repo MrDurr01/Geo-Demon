@@ -5,98 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Geo Demons</title>
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #121212; 
-            color: #ffffff; 
-            padding: 20px; 
-            display: flex;
-            justify-content: center;
-        }
-        .container { 
-            width: 100%; 
-            max-width: 600px; 
-            background: #1e1e1e; 
-            padding: 25px; 
-            border-radius: 12px; 
-            border: 1px solid #333; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        h1 { 
-            color: #ff4757; 
-            text-align: center; 
-            text-transform: uppercase; 
-            letter-spacing: 3px; 
-            margin-bottom: 20px; 
-        }
-        .demon-entry { 
-            display: flex; 
-            align-items: center; 
-            padding: 15px; 
-            border-bottom: 1px solid #333; 
-        }
-        .rank { 
-            font-size: 1.5em; 
-            font-weight: bold; 
-            color: #ffa502; 
-            min-width: 60px; 
-        }
-        .info .name { 
-            font-size: 1.2em; 
-            font-weight: 600; 
-        }
-        .info .verifier { 
-            font-size: 0.9em; 
-            color: #888; 
-        }
-        #list { margin-top: 10px; }
+        body { font-family: sans-serif; background: #121212; color: #fff; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: #1e1e1e; padding: 20px; border-radius: 10px; }
+        h1 { color: #ff4757; text-align: center; }
+        .demon { padding: 15px; border-bottom: 1px solid #333; }
+        .rank { color: #ffa502; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>Geo-Demon</h1>
-    <div id="list">Fetching top demons...</div>
+    <div id="list">Loading...</div>
 </div>
 
 <script>
     async function loadDemonList() {
         const listDiv = document.getElementById('list');
+        // We use allorigins.win to bypass CORS restrictions
         const apiUrl = 'https://pointercrate.com/api/v2/demons/listed?limit=20';
-        
-        // We use a CORS proxy to bypass the browser security restriction
         const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(apiUrl);
 
         try {
             const response = await fetch(proxyUrl);
-            if (!response.ok) throw new Error('Network response was not ok');
-            
             const json = await response.json();
-            const demons = JSON.parse(json.contents);
+            const data = JSON.parse(json.contents);
             
-            listDiv.innerHTML = ''; 
-
-            demons.forEach(d => {
-                const entry = document.createElement('div');
-                entry.className = 'demon-entry';
-                entry.innerHTML = `
-                    <div class="rank">#${d.position}</div>
-                    <div class="info">
-                        <div class="name">${d.name}</div>
-                        <div class="verifier">Verified by: ${d.verifier}</div>
-                    </div>
-                `;
-                listDiv.appendChild(entry);
-            });
-        } catch (error) {
-            listDiv.innerHTML = `<p style="color:#ff4757; text-align:center;">
-                Error loading data: ${error.message}<br>
-                Please ensure you are connected to the internet.
-            </p>`;
-            console.error('Fetch Error:', error);
+            listDiv.innerHTML = data.map(d => `
+                <div class="demon">
+                    <span class="rank">#${d.position}</span> <strong>${d.name}</strong><br>
+                    <small>Verified by: ${d.verifier}</small>
+                </div>
+            `).join('');
+        } catch (e) {
+            listDiv.innerHTML = 'Error loading data: ' + e.message;
         }
     }
-
     loadDemonList();
 </script>
 
