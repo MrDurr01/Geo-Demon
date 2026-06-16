@@ -2,45 +2,102 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Geo Demons</title>
     <style>
-        body { font-family: sans-serif; background: #121212; color: #fff; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: #1e1e1e; padding: 20px; border-radius: 8px; }
-        h1 { color: #ff4757; text-align: center; }
-        .demon { padding: 10px; border-bottom: 1px solid #333; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #121212; 
+            color: #ffffff; 
+            padding: 20px; 
+            display: flex;
+            justify-content: center;
+        }
+        .container { 
+            width: 100%; 
+            max-width: 600px; 
+            background: #1e1e1e; 
+            padding: 25px; 
+            border-radius: 12px; 
+            border: 1px solid #333; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        h1 { 
+            color: #ff4757; 
+            text-align: center; 
+            text-transform: uppercase; 
+            letter-spacing: 3px; 
+            margin-bottom: 20px; 
+        }
+        .demon-entry { 
+            display: flex; 
+            align-items: center; 
+            padding: 15px; 
+            border-bottom: 1px solid #333; 
+        }
+        .rank { 
+            font-size: 1.5em; 
+            font-weight: bold; 
+            color: #ffa502; 
+            min-width: 60px; 
+        }
+        .info .name { 
+            font-size: 1.2em; 
+            font-weight: 600; 
+        }
+        .info .verifier { 
+            font-size: 0.9em; 
+            color: #888; 
+        }
+        #list { margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>Geo-Demon</h1>
-    <div id="list">Loading...</div>
+    <div id="list">Fetching top demons...</div>
 </div>
 
 <script>
-    async function loadList() {
+    async function loadDemonList() {
         const listDiv = document.getElementById('list');
-        try {
-            // Using the primary Pointercrate API endpoint
-            const response = await fetch('https://pointercrate.com/api/v2/demons/listed?limit=10', {
-                method: 'GET',
-                headers: { 'Accept': 'application/json' }
-            });
+        const apiUrl = 'https://pointercrate.com/api/v2/demons/listed?limit=20';
+        
+        // We use a CORS proxy to bypass the browser security restriction
+        const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(apiUrl);
 
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        try {
+            const response = await fetch(proxyUrl);
+            if (!response.ok) throw new Error('Network response was not ok');
             
-            const data = await response.json();
-            listDiv.innerHTML = data.map(d => `
-                <div class="demon">
-                    <strong>#${d.position} ${d.name}</strong><br>
-                    <small>Verified by: ${d.verifier}</small>
-                </div>
-            `).join('');
-        } catch (e) {
-            listDiv.innerHTML = 'Error: ' + e.message + '<br>Check your browser console (F12) for more details.';
+            const json = await response.json();
+            const demons = JSON.parse(json.contents);
+            
+            listDiv.innerHTML = ''; 
+
+            demons.forEach(d => {
+                const entry = document.createElement('div');
+                entry.className = 'demon-entry';
+                entry.innerHTML = `
+                    <div class="rank">#${d.position}</div>
+                    <div class="info">
+                        <div class="name">${d.name}</div>
+                        <div class="verifier">Verified by: ${d.verifier}</div>
+                    </div>
+                `;
+                listDiv.appendChild(entry);
+            });
+        } catch (error) {
+            listDiv.innerHTML = `<p style="color:#ff4757; text-align:center;">
+                Error loading data: ${error.message}<br>
+                Please ensure you are connected to the internet.
+            </p>`;
+            console.error('Fetch Error:', error);
         }
     }
-    loadList();
+
+    loadDemonList();
 </script>
 
 </body>
